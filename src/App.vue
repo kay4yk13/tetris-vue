@@ -1,32 +1,30 @@
 <template>
-  <div id="app">
-    <nav>
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </nav>
-    <router-view/>
-  </div>
+	<div>
+		<WelcomeScreen v-if="game_state == 'welcome'"></WelcomeScreen>
+		<Game v-if="game_state == 'game'"></Game>
+		<GameOver v-if="game_state == 'game_over'"></GameOver>
+		<Controls></Controls>
+	</div>
 </template>
+<script>
+import Game from "./components/Game.vue";
+import WelcomeScreen from "./components/WelcomeScreen.vue";
+import GameOver from "./components/Gameover.vue";
+import Controls from "./components/Controls.vue";
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
-
-nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+export default {
+	components: {
+		Game,
+		WelcomeScreen,
+		GameOver,
+		Controls,
+	},
+	computed: {
+		game_state() {
+			return this.$store.getters["State_of_game"];
+			console.log(game_state);
+		},
+	},
+};
+</script>
+<style></style>

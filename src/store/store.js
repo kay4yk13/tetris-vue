@@ -5,6 +5,24 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
 	state: {
+		figures: [
+			{
+				o: [
+					[0, 4],
+					[0, 5],
+					[1, 4],
+					[1, 5],
+				],
+			},
+			{
+				T: [
+					[0, 4],
+					[0, 5],
+					[0, 6],
+					[1, 5],
+				],
+			},
+		],
 		glass: [
 			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -40,26 +58,31 @@ export default new Vuex.Store({
 		},
 	},
 	actions: {
-		Togle({ commit }, value) {
+		togleGameState({ commit }, value) {
 			commit("toggleGameState", value);
 		},
-		Filler({ commit }) {
-			commit("searchFullLineANdErase");
-			commit("lineGenerator");
+		updateGlass({ commit }, glass) {
+			commit("setNewDefaultGlass", glass);
+		},
+		generateLine({ commit }, glass) {
+			commit("generateLine", glass);
+		},
+		eraseLine({ commit }, glass) {
+			commit("eraseLine", glass);
 		},
 	},
 	mutations: {
 		toggleGameState(state, value) {
 			state.game_state = value;
 		},
-		lineGenerator(state) {
-			let i = Math.floor(Math.random() * 19);
-
-			state.glass.splice(i, 1, this.state.fullLine);
+		generateLine(state, i) {
+			state.glass.splice(i, 1, state.fullLine);
 		},
-		searchFullLineANdErase() {
-			let i = this.state.glass.indexOf(this.state.glass.find((n) => n == this.state.fullLine));
-			this.state.glass.splice(i, 1, this.state.emptyLine);
+		eraseLine(state, i) {
+			state.glass.splice(i, 1, state.emptyLine);
+		},
+		setNewDefaultGlass(state, glass) {
+			state.glass = glass;
 		},
 	},
 	modules: {},

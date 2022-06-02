@@ -1,6 +1,7 @@
 <template>
 	<div class="game">
-		<Keypress key-event="keyup" :key-code="49" @success="loop" /> 1 - full line
+		<div>1 - cube<br /></div>
+		<Keypress key-event="keyup" :key-code="49" @success="loop" />
 
 		<div class="glass">
 			<div class="line" v-for="line in glass">
@@ -22,33 +23,32 @@ export default {
 	},
 	computed: {
 		glass() {
-			return this.$store.getters["GetGlass"];
+			return this.$store.getters.getGlass;
 		},
 	},
-	// created() {
-	// 	this.loop();
-	// },
+	created() {
+		this.loop();
+	},
 	methods: {
 		loop() {
-			console.table(this.glass);
-			if (this.counter == 20) {
-				this.$store.dispatch("updateGlass", this.glass);
+			this.$store.dispatch("addNewFigure", "T");
+			window.setTimeout(() => {
+				this.movingDown();
+			}, 500);
+		},
+		movingDown() {
+			if (this.counter == 18) {
+				this.$store.dispatch("setNewDefaultGlass", this.glass);
 				return;
 			}
 			console.log(this.counter);
-			this.$store.dispatch("generateLine", this.counter);
-			this.$store.dispatch("eraseLine", this.counter - 1);
+			this.$store.dispatch("movingDown");
 			this.counter++;
 			window.setTimeout(() => {
-				this.loop();
+				this.movingDown();
 			}, 500);
 		},
-		// dropO() {
-		// 	if (this.counter == 20) {
-		// 		this.$store.dispatch("updateGlass", this.glass);
-		// 		return;
-		// 	}
-		// },
+
 		activeColor(block) {
 			if (block) {
 				return "black";

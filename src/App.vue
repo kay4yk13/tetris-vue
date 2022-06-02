@@ -21,8 +21,7 @@ export default {
 	},
 	computed: {
 		game_state() {
-			return this.$store.getters["State_of_game"];
-			console.log(game_state);
+			return this.$store.getters["getStateOfGame"];
 		},
 	},
 };

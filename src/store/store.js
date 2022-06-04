@@ -100,26 +100,26 @@ export default new Vuex.Store({
 			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		],
 		game_state: "welcome",
-		fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		// fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+		// emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		coordsOfCurrentFigure: [],
+		ability: 1,
 	},
 	getters: {
 		getStateOfGame(state) {
 			return state.game_state;
 		},
 		getGlass(state) {
-			return state.glass;
+			return [...state.glass];
 		},
 		getFigureStartCoords: (state) => (name) => {
-			return Object.values(state.figures.find((figure) => figure.name === name))[1];
+			return [...state.figures.find((figure) => figure.name === name).coords];
 		},
 		getFigureCoords(state) {
-			return state.coordsOfCurrentFigure;
+			return [...state.coordsOfCurrentFigure];
 		},
-		//dont work((
-		getCoordsOfOccupiedLine(state) {
-			return state.glass.indexOf(!state.emptyLine);
+		getAbility(state) {
+			return state.ability;
 		},
 	},
 	actions: {
@@ -135,12 +135,15 @@ export default new Vuex.Store({
 		eraseLine({ commit }, glass) {
 			commit("eraseLine", glass);
 		},
-		addCoordsToState({ commit }) {
-			commit("addCoordsToState");
+		setAbility({ commit }, value) {
+			commit("setAbility", value);
+		},
+		setNewDefaultGlass({ commit }, glass) {
+			commit("putNewCoordsToGlass", glass);
 		},
 
 		movingDown({ commit }) {
-			let coords = { ...this.getters.getFigureCoords };
+			let coords = [...this.getters.getFigureCoords];
 			commit("eraseFigureFromGlass");
 			for (let i = 0; i < 4; i++) {
 				coords[i][0]++;
@@ -151,8 +154,33 @@ export default new Vuex.Store({
 		addNewFigure({ commit }, name) {
 			commit("addNewFigure", name);
 		},
+		checkEmptyBlocksBelow({ commit }) {
+			if (this.getters.getFigureCoords[3][0] < 19) {
+				for (let i = 0; i < 4; i++) {
+					let x = this.getters.getFigureCoords[i][1];
+					let y = this.getters.getFigureCoords[i][0];
+					if (this.state.glass[y + 1][x] == 1) {
+						let activeFigurePoints = JSON.parse(
+							JSON.stringify(
+								this.getters.getFigureCoords.filter((point) => {
+									return point[0] === y + 1 && point[1] === x;
+								})
+							)
+						);
+						if (activeFigurePoints.length > 0) {
+							commit("setAbility", 1);
+						} else {
+							commit("setAbility", 0);
+							return;
+						}
+					}
+				}
+			} else {
+				commit("setAbility", 0);
+				return;
+			}
+		},
 	},
-
 	mutations: {
 		toggleGameState(state, value) {
 			state.game_state = value;
@@ -163,33 +191,37 @@ export default new Vuex.Store({
 		eraseLine(state, i) {
 			state.glass.splice(i, 1, state.emptyLine);
 		},
-		setNewDefaultGlass(state, glass) {
-			state.glass = glass;
+		setAbility(state, value) {
+			this.state.ability = value;
 		},
 		eraseFigureFromGlass(state) {
 			for (let i = 0; i < 4; i++) {
 				let x = this.getters.getFigureCoords[i][1];
 				let y = this.getters.getFigureCoords[i][0];
-				state.glass[y].splice([x], 1, 0);
+				Vue.set(state.glass[y], x, 0);
 			}
 		},
 		addNewFigure(state, name) {
+			this.state.coordsOfCurrentFigure = [...this.getters.getFigureStartCoords(name)];
 			for (let i = 0; i < 4; i++) {
 				let x = this.getters.getFigureStartCoords(name)[i][1];
 				let y = this.getters.getFigureStartCoords(name)[i][0];
+				Vue.set(state.glass[y], x, 1);
+				// Vue.set(state.coordsOfCurrentFigure[i], 1, [y, x]);
 				this.state.coordsOfCurrentFigure.splice(i, 1, [y, x]);
-				this.state.glass[y].splice([x], 1, 1);
 			}
 		},
 		putNewCoordsToGlass(state) {
+			this.state.coordsOfCurrentFigure = [...this.getters.getFigureCoords];
 			for (let i = 0; i < 4; i++) {
 				let x = this.getters.getFigureCoords[i][1];
 				let y = this.getters.getFigureCoords[i][0];
-				state.glass[y].splice([x], 1, 1);
+				// this.state.glass[y].splice([x], 1, 1);
+				Vue.set(this.state.glass[y], x, 1);
 			}
 		},
 		updateCoordsOfCurrentFigure(state, coords) {
-			state.coordsOfCurrentFigure = coords;
+			Vue.set(state.coordsOfCurrentFigure, coords);
 		},
 	},
 

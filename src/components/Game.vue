@@ -1,7 +1,13 @@
 <template>
 	<div class="game">
-		<div>1 - cube<br /></div>
-		<Keypress key-event="keyup" :key-code="49" @success="loop" />
+		<div>
+			1 - o
+			<br />
+			2- T
+		</div>
+		<Keypress key-event="keyup" :key-code="49" @success="loopO" />
+		<Keypress key-event="keyup" :key-code="50" @success="loopT" />
+		<Keypress key-event="keyup" :key-code="51" @success="TEST" />
 
 		<div class="glass">
 			<div class="line" v-for="line in glass">
@@ -25,30 +31,46 @@ export default {
 		glass() {
 			return this.$store.getters.getGlass;
 		},
+		ability() {
+			return this.$store.getters.getAbility;
+		},
+		bottom() {
+			// todo refactor => make dynamic
+			return this.$store.getters.getFigureCoords[3][0];
+		},
 	},
-	created() {
-		this.loop();
-	},
+	// created() {
+	// 	this.loop();
+	// },
 	methods: {
-		loop() {
+		TEST() {
+			this.$store.dispatch("addNewFigure", "TEST");
+			this.$store.dispatch("TEST");
+		},
+		loopT() {
 			this.$store.dispatch("addNewFigure", "T");
 			window.setTimeout(() => {
 				this.movingDown();
-			}, 500);
+			}, 200);
 		},
-		movingDown() {
-			if (this.counter == 18) {
-				this.$store.dispatch("setNewDefaultGlass", this.glass);
-				return;
-			}
-			console.log(this.counter);
-			this.$store.dispatch("movingDown");
-			this.counter++;
+		loopO() {
+			this.$store.dispatch("addNewFigure", "o");
 			window.setTimeout(() => {
 				this.movingDown();
-			}, 500);
+			}, 200);
 		},
-
+		movingDown() {
+			this.$store.dispatch("checkEmptyBlocksBelow");
+			if (this.ability == 1 && this.bottom < 19) {
+				this.$store.dispatch("movingDown");
+				window.setTimeout(() => {
+					this.movingDown();
+				}, 200);
+			}
+			this.$store.dispatch("setNewDefaultGlass", this.glass);
+			this.$store.dispatch("setAbility", 1);
+			return;
+		},
 		activeColor(block) {
 			if (block) {
 				return "black";

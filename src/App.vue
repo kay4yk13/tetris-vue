@@ -21,7 +21,7 @@ export default {
 	},
 	computed: {
 		game_state() {
-			return this.$store.getters["getStateOfGame"];
+			return this.$store.getters.getStateOfGame;
 		},
 	},
 };

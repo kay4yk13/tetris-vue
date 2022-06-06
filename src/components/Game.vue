@@ -7,7 +7,7 @@
 		</div>
 		<Keypress key-event="keyup" :key-code="49" @success="loopO" />
 		<Keypress key-event="keyup" :key-code="50" @success="loopT" />
-		<Keypress key-event="keyup" :key-code="51" @success="TEST" />
+		<Keypress key-event="keyup" :key-code="51" @success="loop" />
 
 		<div class="glass">
 			<div class="line" v-for="line in glass">
@@ -23,9 +23,7 @@ export default {
 		Keypress: () => import("vue-keypress"),
 	},
 	data() {
-		return {
-			counter: 0,
-		};
+		return {};
 	},
 	computed: {
 		glass() {
@@ -38,37 +36,56 @@ export default {
 			// todo refactor => make dynamic
 			return this.$store.getters.getFigureCoords[3][0];
 		},
-	},
-	// created() {
-	// 	this.loop();
-	// },
-	methods: {
-		TEST() {
-			this.$store.dispatch("addNewFigure", "TEST");
-			this.$store.dispatch("TEST");
+		figuresNames() {
+			return this.$store.getters.getFiguresNames;
 		},
+	},
+	created() {
+		this.loop();
+	},
+	methods: {
+		loop() {
+			if (this.ability == 1) {
+				this.loopT();
+			}
+			this.$store.dispatch("setAbility", 1);
+			window.setTimeout(() => {
+				this.loop();
+			}, 150);
+		},
+		newFigureGenerator() {
+			let i = this.figuresNames.length;
+			let randI = Math.floor(Math.random() * i);
+			return this.figuresNames[randI];
+		},
+
 		loopT() {
-			this.$store.dispatch("addNewFigure", "T");
+			let name = this.newFigureGenerator();
+			this.$store.dispatch("checkGameOver", name);
+
+			this.$store.dispatch("addNewFigure", name);
 			window.setTimeout(() => {
 				this.movingDown();
-			}, 200);
+			}, 150);
 		},
+
 		loopO() {
-			this.$store.dispatch("addNewFigure", "o");
+			this.newFigureGenerator();
+			this.$store.dispatch("addNewFigure", "O");
 			window.setTimeout(() => {
 				this.movingDown();
 			}, 200);
 		},
 		movingDown() {
 			this.$store.dispatch("checkEmptyBlocksBelow");
-			if (this.ability == 1 && this.bottom < 19) {
+			if (this.ability == 1) {
 				this.$store.dispatch("movingDown");
 				window.setTimeout(() => {
 					this.movingDown();
-				}, 200);
+				}, 150);
 			}
 			this.$store.dispatch("setNewDefaultGlass", this.glass);
-			this.$store.dispatch("setAbility", 1);
+			this.$store.dispatch("setAbility", 0);
 			return;
 		},
 		activeColor(block) {

@@ -7,7 +7,7 @@ export default new Vuex.Store({
 	state: {
 		figures: [
 			{
-				name: "o",
+				name: "O",
 				coords: [
 					[0, 4],
 					[0, 5],
@@ -115,6 +115,9 @@ export default new Vuex.Store({
 		getFigureStartCoords: (state) => (name) => {
 			return [...state.figures.find((figure) => figure.name === name).coords];
 		},
+		getFiguresNames(state) {
+			return [...state.figures.map(({ name }) => name)];
+		},
 		getFigureCoords(state) {
 			return [...state.coordsOfCurrentFigure];
 		},
@@ -180,6 +183,19 @@ export default new Vuex.Store({
 				return;
 			}
 		},
+		checkGameOver({ commit }, name) {
+			for (let i = 0; i < 4; i++) {
+				let x = this.getters.getFigureStartCoords(name)[i][1];
+				let y = this.getters.getFigureStartCoords(name)[i][0];
+				if (this.state.glass[y][x] != 1) {
+					commit("setAbility", 1);
+					return;
+				}
+				commit("setAbility", 0);
+				commit("toggleGameState", "game_over");
+				// return;
+			}
+		},
 	},
 	mutations: {
 		toggleGameState(state, value) {
@@ -202,11 +218,11 @@ export default new Vuex.Store({
 			}
 		},
 		addNewFigure(state, name) {
-			this.state.coordsOfCurrentFigure = [...this.getters.getFigureStartCoords(name)];
+			// this.state.coordsOfCurrentFigure = [...this.getters.getFigureStartCoords(name)];
 			for (let i = 0; i < 4; i++) {
 				let x = this.getters.getFigureStartCoords(name)[i][1];
 				let y = this.getters.getFigureStartCoords(name)[i][0];
-				Vue.set(state.glass[y], x, 1);
+				Vue.set(this.state.glass[y], x, 1);
 				// Vue.set(state.coordsOfCurrentFigure[i], 1, [y, x]);
 				this.state.coordsOfCurrentFigure.splice(i, 1, [y, x]);
 			}

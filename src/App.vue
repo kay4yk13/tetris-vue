@@ -1,8 +1,9 @@
 <template>
 	<div>
-		<WelcomeScreen v-if="game_state == 'welcome'"></WelcomeScreen>
-		<Game v-if="game_state == 'game'"></Game>
-		<GameOver v-if="game_state == 'game_over'"></GameOver>
+		<WelcomeScreen v-if="gameState == 'welcome'"></WelcomeScreen>
+		<!-- <Game v-if="gameState == 'game' || 'game_over'" :style="{ opacity: activeGameState() }"></Game> -->
+		<Game v-if="gameState != 'welcome'" :style="{ opacity: activeGameState() }"></Game>
+		<GameOver v-if="gameState == 'game_over'"></GameOver>
 		<Controls></Controls>
 	</div>
 </template>
@@ -20,8 +21,17 @@ export default {
 		Controls,
 	},
 	computed: {
-		game_state() {
+		gameState() {
 			return this.$store.getters.getStateOfGame;
+		},
+	},
+	methods: {
+		activeGameState() {
+			if (this.gameState === "game_over") {
+				return "0.5";
+			} else {
+				return "1";
+			}
 		},
 	},
 };

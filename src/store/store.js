@@ -77,37 +77,21 @@ export default new Vuex.Store({
 				color: "orange",
 			},
 		],
-		glass: [
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-			[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-		],
-		game_state: "welcome",
+		glass: [],
+		currentFigureCoords: [],
+		nextFigureCoords: [],
+		nextFigureWIdgetMatrix: [],
+		gameState: "welcome",
+		isGameOver: 0,
 		// fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 		// emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-		coordsOfCurrentFigure: [],
-		ability: 1,
 	},
 	getters: {
 		getStateOfGame(state) {
-			return state.game_state;
+			return state.gameState;
+		},
+		getGOstatus(state) {
+			return state.isGameOver;
 		},
 		getGlass(state) {
 			return [...state.glass];
@@ -118,128 +102,110 @@ export default new Vuex.Store({
 		getFiguresNames(state) {
 			return [...state.figures.map(({ name }) => name)];
 		},
-		getFigureCoords(state) {
-			return [...state.coordsOfCurrentFigure];
+		getNextFigureCoords(state) {
+			return [...state.nextFigureCoords];
 		},
-		getAbility(state) {
-			return state.ability;
+		getWidgetMatrix(state) {
+			return [...state.nextFigureWIdgetMatrix];
+		},
+		getCurrentFigureCoords(state) {
+			return [...state.currentFigureCoords];
 		},
 	},
 	actions: {
 		togleGameState({ commit }, value) {
 			commit("toggleGameState", value);
 		},
-		setNewDefaultGlass({ commit }, glass) {
-			commit("setNewDefaultGlass", glass);
+		cleanGlass({ commit }) {
+			commit("cleanGlass");
 		},
-		generateLine({ commit }, glass) {
-			commit("generateLine", glass);
+		setGOstatus({ commit }, value) {
+			commit("setGOstatus", value);
 		},
-		eraseLine({ commit }, glass) {
-			commit("eraseLine", glass);
+		addNextFigureToState({ commit }, coords) {
+			commit("addNextFigureToState", coords);
+			commit("matrixForWidget", 0);
+			commit("matrixForWidget", 1);
 		},
-		setAbility({ commit }, value) {
-			commit("setAbility", value);
+		addCurrentFigureToState({ commit }, coords) {
+			commit("addCurrentFigureToState", coords);
 		},
-		setNewDefaultGlass({ commit }, glass) {
-			commit("putNewCoordsToGlass", glass);
+		addCurrentFigureCoordsToGlass({ commit }) {
+			commit("changeCurrentFigureCoordsInGlassTo", 1);
 		},
-
-		movingDown({ commit }) {
-			let coords = [...this.getters.getFigureCoords];
-			commit("eraseFigureFromGlass");
+		moveFigureDown({ commit }) {
+			let coords = [...this.getters.getCurrentFigureCoords];
+			commit("changeCurrentFigureCoordsInGlassTo", 0);
 			for (let i = 0; i < 4; i++) {
 				coords[i][0]++;
+				commit("addCurrentFigureToState", coords);
 			}
-			commit("updateCoordsOfCurrentFigure", coords);
-			commit("putNewCoordsToGlass");
-		},
-		addNewFigure({ commit }, name) {
-			commit("addNewFigure", name);
-		},
-		checkEmptyBlocksBelow({ commit }) {
-			if (this.getters.getFigureCoords[3][0] < 19) {
-				for (let i = 0; i < 4; i++) {
-					let x = this.getters.getFigureCoords[i][1];
-					let y = this.getters.getFigureCoords[i][0];
-					if (this.state.glass[y + 1][x] == 1) {
-						let activeFigurePoints = JSON.parse(
-							JSON.stringify(
-								this.getters.getFigureCoords.filter((point) => {
-									return point[0] === y + 1 && point[1] === x;
-								})
-							)
-						);
-						if (activeFigurePoints.length > 0) {
-							commit("setAbility", 1);
-						} else {
-							commit("setAbility", 0);
-							return;
-						}
-					}
-				}
-			} else {
-				commit("setAbility", 0);
-				return;
-			}
-		},
-		checkGameOver({ commit }, name) {
-			for (let i = 0; i < 4; i++) {
-				let x = this.getters.getFigureStartCoords(name)[i][1];
-				let y = this.getters.getFigureStartCoords(name)[i][0];
-				if (this.state.glass[y][x] != 1) {
-					commit("setAbility", 1);
-					return;
-				}
-				commit("setAbility", 0);
-				commit("toggleGameState", "game_over");
-				// return;
-			}
+			commit("changeCurrentFigureCoordsInGlassTo", 1);
 		},
 	},
 	mutations: {
 		toggleGameState(state, value) {
-			state.game_state = value;
+			state.gameState = value;
 		},
-		generateLine(state, i) {
-			state.glass.splice(i, 1, state.fullLine);
+		setGOstatus(state, value) {
+			state.isGameOver = value;
 		},
-		eraseLine(state, i) {
-			state.glass.splice(i, 1, state.emptyLine);
+		addNextFigureToState(state, coords) {
+			state.nextFigureCoords = coords;
 		},
-		setAbility(state, value) {
-			this.state.ability = value;
+		addCurrentFigureToState(state, coords) {
+			state.currentFigureCoords = coords;
 		},
-		eraseFigureFromGlass(state) {
+		changeCurrentFigureCoordsInGlassTo(state, value) {
+			let coords = this.getters.getCurrentFigureCoords;
 			for (let i = 0; i < 4; i++) {
-				let x = this.getters.getFigureCoords[i][1];
-				let y = this.getters.getFigureCoords[i][0];
-				Vue.set(state.glass[y], x, 0);
+				let x = coords[i][1];
+				let y = coords[i][0];
+				Vue.set(state.glass[y], x, value);
 			}
 		},
-		addNewFigure(state, name) {
-			// this.state.coordsOfCurrentFigure = [...this.getters.getFigureStartCoords(name)];
-			for (let i = 0; i < 4; i++) {
-				let x = this.getters.getFigureStartCoords(name)[i][1];
-				let y = this.getters.getFigureStartCoords(name)[i][0];
-				Vue.set(this.state.glass[y], x, 1);
-				// Vue.set(state.coordsOfCurrentFigure[i], 1, [y, x]);
-				this.state.coordsOfCurrentFigure.splice(i, 1, [y, x]);
+		matrixForWidget(state, value) {
+			let coords = this.getters.getNextFigureCoords;
+			if (value != 0) {
+				for (let i = 0; i < 4; i++) {
+					let x = coords[i][1] - 3;
+					let y = coords[i][0] + 1;
+					Vue.set(state.nextFigureWIdgetMatrix[y], x, value);
+				}
+				return;
 			}
+			state.nextFigureWIdgetMatrix = [
+				[0, 0, 0, 0],
+				[0, 0, 0, 0],
+				[0, 0, 0, 0],
+				[0, 0, 0, 0],
+			];
+			return;
 		},
-		putNewCoordsToGlass(state) {
-			this.state.coordsOfCurrentFigure = [...this.getters.getFigureCoords];
-			for (let i = 0; i < 4; i++) {
-				let x = this.getters.getFigureCoords[i][1];
-				let y = this.getters.getFigureCoords[i][0];
-				// this.state.glass[y].splice([x], 1, 1);
-				Vue.set(this.state.glass[y], x, 1);
-			}
-		},
-		updateCoordsOfCurrentFigure(state, coords) {
-			Vue.set(state.coordsOfCurrentFigure, coords);
+		cleanGlass(state) {
+			state.glass = [
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+			];
 		},
 	},
-
-	modules: {},
 });
+1;

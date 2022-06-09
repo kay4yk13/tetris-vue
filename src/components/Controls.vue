@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<Keypress key-event="keyup" :key-code="32" @success="btnpress" />
+		<Keypress key-event="keyup" :key-code="null" @success="btnpress" />
 	</div>
 </template>
 <script>

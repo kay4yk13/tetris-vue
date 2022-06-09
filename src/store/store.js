@@ -83,6 +83,7 @@ export default new Vuex.Store({
 		nextFigureWIdgetMatrix: [],
 		gameState: "welcome",
 		isGameOver: 0,
+		gravitySpeed: 500,
 		// fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 		// emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	},
@@ -110,6 +111,9 @@ export default new Vuex.Store({
 		},
 		getCurrentFigureCoords(state) {
 			return [...state.currentFigureCoords];
+		},
+		getGravitySpeed(state) {
+			return state.gravitySpeed;
 		},
 	},
 	actions: {
@@ -184,6 +188,7 @@ export default new Vuex.Store({
 		},
 		cleanGlass(state) {
 			state.glass = [
+				[1, 1, 0, 0, 0, 0, 0, 0, 1, 1],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

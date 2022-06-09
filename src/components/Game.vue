@@ -36,6 +36,9 @@ export default {
 		nextFigureCoords() {
 			return this.$store.getters.getNextFigureCoords;
 		},
+		gravitySpeed() {
+			return this.$store.getters.getGravitySpeed;
+		},
 		currentFigureCoords() {
 			return this.$store.getters.getCurrentFigureCoords;
 		},
@@ -72,7 +75,7 @@ export default {
 			this.putNextFigureInTheGlass();
 			window.setTimeout(() => {
 				this.loop();
-			}, 200);
+			}, this.gravitySpeed);
 		},
 		loop() {
 			if (this.isGameOver === 1) {
@@ -87,7 +90,7 @@ export default {
 			}
 			window.setTimeout(() => {
 				this.loop();
-			}, 100);
+			}, this.gravitySpeed);
 		},
 		prepareNextFigure() {
 			let name = this.prepareNextFigureName();
@@ -124,7 +127,7 @@ export default {
 		},
 		canCurrentFigureMoveDown() {
 			let coords = [...JSON.parse(JSON.stringify(this.currentFigureCoords))];
-			if (coords[3][0] < 19) {
+			if (coords[3][0] < 20) {
 				for (let i = 0; i < 4; i++) {
 					let x = coords[i][1];
 					let y = coords[i][0];
@@ -151,19 +154,24 @@ export default {
 .glass {
 	margin: auto;
 	width: 405px;
-	height: 805px;
+	height: 802px;
 	border-style: hidden solid solid solid;
+}
+.glass :first-child {
+	display: none;
 }
 .line {
 	height: 40px;
 	display: flex;
 }
+
 .block {
 	height: 100%;
 	width: 10%;
 	border-style: groove;
 	border-width: 1px;
 	border-color: rgb(134, 135, 139);
+	display: block !important;
 }
 .widget {
 	position: absolute;

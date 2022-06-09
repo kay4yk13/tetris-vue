@@ -1,0 +1,155 @@
+default state:
+Glass{arr1:[0......0]etc} - 10 arrays of 20 elements "0"
+
+- cycle start with generation of new figure
+    - figure fully viewed and centered when appear
+- on each Step of figure moving its position rewrites
+    - coordinates of figure - group of "adresses" in arrays grid, f.e. A1[Index],A2[Index] etc...
+    - ability of figure to move checking ("0" Objects in array with Index+1 relatevely of figure bloks Indexes)
+    - writes down coordinates of figures new position
+    - old coordinates erased
+- after each full Cycle, State's been rewrited with new data
+    - full cycle - while figure is able to move down
+    - when figure reachs lowest position cycle stops
+    - change state with new default Glass
+- when all the arrays gets "1" as an object with the same index by the end of cycle - line destroys
+    - line rewrites with "0"
+    - all the _top_ objects moves down with gravity
+    - starts new cycle
+    - change state with new default Glass
+
+
+Phase I
+- vue.app
+    -components routed(?) depending on state in vuex
+        - Start.vue
+            - press any key
+            - change appState in vuex
+            - launch Game.vue
+        - Game.vue
+            - getGlassFromState()
+            - gameTick()
+                - checkGameOver()
+                      - writeAppState()
+                            - GameOver.vue
+                - canFigureGoDown()
+                
+                    if YES    
+                    - moveFigureDown()
+                     - removeOld()
+                     - writeNew()
+                     - rerender()
+                    
+                    if NO
+                    - checkGameOver()
+                        if YES
+                        - writeAppState()
+                            - GameOver.vue
+                        if NO
+                        - handleFilledLines()
+                        - checkEachLine()
+                            - if lineFilled
+                                - splice + unshift
+                            - if NO 
+                                - writeGlassToState()
+                                - generateNewFigure()
+                                - gameTick()       
+        - Controls.vue
+
+
+
+
+         
+
+
+init()
+   prepareNextFigure() 
+   putNextFigureInTheGlass() 
+    loop()
+
+loop()
+    if (state.gameOver === 1)
+        return finishGame()
+    if (canCurrentFigureMoveDown())
+        moveFigureDown()
+    else
+        putNextFigureInTheGlass()
+        loop() with delay
+
+//functions in order they callled in init and loop
+
+prepareNextFigure()
+    generateNextFigure()
+    generatedNewFigure => state        
+
+putNextFigureInTheGlass()
+    isNextFigureCollideGlass()
+        state.gameOver = 1
+    currentFigure = nextFigure
+    currentFigure.forEach => to the glass
+    prepareNextFigure()
+
+canCurrentFigureMoveDown()
+    if (there are smth below currentFigure)
+        return true (figure cant move down) 
+    else 
+        if (affective points belong figure)
+        true; continue //keep on checking another points
+        else 
+            false //smth really below 
+    
+isNextFigureCollideGlass()
+    state.nextFigure.forEach()
+    return true
+    
+moveFigureDown()
+    erase coords of currentFigure from the glass
+    add 1 to Y of currentFigure coords
+    update currentFigure state
+    update glass state with coords of currentFigure
+
+finishGame()
+    state.gameState = 'GO'
+
+
+TESTS
+
+1. init()
+    1.1. prepareNextFigure()
+        T - log new generated figure, check state in vueDevTools
+
+    1.2. putNextFigureInTheGlass()
+    - isNextFigureCollideGlass()
+        T - hardcode some points in the glass top and log the result of test
+    - state.isGameOver = 1
+        T - vueDevTools check state
+    - currentFigure = nextFigure
+        T - vueDevTools check state
+    - currentFigure.forEach => to the glass
+        T - test visually
+    - prepareNextFigure()
+        T - vueDevTools check state
+
+2. loop()
+    if (state.gameOver === 1)
+         return finishGame()
+         T - visually, and state via vueDevTools
+
+    2.1. if (canCurrentFigureMoveDown())
+         T - log coords of points which affects on logic of this test, and check are they correct
+    
+    2.2. moveFigureDown()
+         T- visually
+    else
+        putNextFigureInTheGlass()
+        T - above
+        loop()
+        T - visually
+
+
+TODO later:
+figure appears 1 line above glass, and droped in the glass line by line.
+1. it will add ability to rapidly move figure left|right when only center is blocked
+2. it will reduce necessity to chek is figure reacts to self block as an obstacle 
+
+ 

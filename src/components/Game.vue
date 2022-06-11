@@ -1,12 +1,17 @@
 <template>
 	<div class="game">
-		<Keypress key-event="keyup" :key-code="0" @success="init" />
+		<Keypress key-event="keydown" :key-code="87" @success="increaseGravitySpeed" />
+		<Keypress key-event="keydown" :key-code="83" @success="decreaseGravitySpeed" />
+		<Keypress key-event="keydown" :key-code="65" @success="moveFigureLeft" />
+		<Keypress key-event="keydown" :key-code="68" @success="moveFigureRight" />
 		<div class="glass">
 			<div class="line" v-for="line in glass">
 				<span class="block" v-for="block in line" :style="{ 'background-color': activeColor(block) }"> </span>
 			</div>
 		</div>
 		<div class="widget">
+			<b>speed: {{ 2000 - gravitySpeed }}</b>
+			<br />
 			<b>NEXT FIGURE</b>
 			<div class="w-line" v-for="line in WidgetMatrix">
 				<span class="w-block" v-for="block in line" :style="{ 'background-color': activeColor(block) }"> </span>
@@ -16,6 +21,9 @@
 </template>
 
 <script>
+const GLASS_LIMIT_RIGHT = 9;
+const GLASS_LIMIT_LEFT = 0;
+const GLASS_LIMIT_BOTTOM = 20;
 export default {
 	components: {
 		Keypress: () => import("vue-keypress"),
@@ -23,6 +31,7 @@ export default {
 	data() {
 		return {};
 	},
+
 	computed: {
 		gameState() {
 			return this.$store.getters.getStateOfGame;
@@ -53,6 +62,18 @@ export default {
 		this.init();
 	},
 	methods: {
+		increaseGravitySpeed() {
+			if (this.gravitySpeed >= 100) {
+				this.$store.dispatch("changeGravitySpeed", 1);
+			}
+			return;
+		},
+		decreaseGravitySpeed() {
+			if (this.gravitySpeed <= 2000) {
+				this.$store.dispatch("changeGravitySpeed", 0);
+			}
+			return;
+		},
 		activeGameState() {
 			if (this.gameState === "game_over") {
 				return "0.4";
@@ -71,6 +92,7 @@ export default {
 		//main function
 		init() {
 			this.$store.dispatch("cleanGlass");
+			this.$store.dispatch("togleGameState", "game");
 			this.prepareNextFigure();
 			this.putNextFigureInTheGlass();
 			window.setTimeout(() => {
@@ -127,7 +149,7 @@ export default {
 		},
 		canCurrentFigureMoveDown() {
 			let coords = [...JSON.parse(JSON.stringify(this.currentFigureCoords))];
-			if (coords[3][0] < 20) {
+			if (coords[3][0] < GLASS_LIMIT_BOTTOM) {
 				for (let i = 0; i < 4; i++) {
 					let x = coords[i][1];
 					let y = coords[i][0];
@@ -144,8 +166,37 @@ export default {
 			}
 			return false;
 		},
+		isCurrentFigureBumpTheWall(direction) {
+			let limit;
+			if (direction === 0) {
+				limit = GLASS_LIMIT_LEFT;
+			} else {
+				limit = GLASS_LIMIT_RIGHT;
+			}
+			let figureCoords = [...JSON.parse(JSON.stringify(this.currentFigureCoords))];
+			let blockCoords = figureCoords.filter((block) => {
+				return block[1] === limit;
+			});
+			// console.log("aray", blockCoords);
+			if (blockCoords.length > 0) {
+				return true;
+			}
+		},
 		moveFigureDown() {
 			this.$store.dispatch("moveFigureDown");
+		},
+		moveFigureLeft() {
+			if (this.isCurrentFigureBumpTheWall(0) === true) {
+				return;
+			}
+			this.$store.dispatch("moveFigureHorizontally", 0);
+		},
+
+		moveFigureRight() {
+			if (this.isCurrentFigureBumpTheWall(1) === true) {
+				return;
+			}
+			this.$store.dispatch("moveFigureHorizontally", 1);
 		},
 	},
 };

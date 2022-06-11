@@ -1,67 +1,3 @@
-default state:
-Glass{arr1:[0......0]etc} - 10 arrays of 20 elements "0"
-
-- cycle start with generation of new figure
-    - figure fully viewed and centered when appear
-- on each Step of figure moving its position rewrites
-    - coordinates of figure - group of "adresses" in arrays grid, f.e. A1[Index],A2[Index] etc...
-    - ability of figure to move checking ("0" Objects in array with Index+1 relatevely of figure bloks Indexes)
-    - writes down coordinates of figures new position
-    - old coordinates erased
-- after each full Cycle, State's been rewrited with new data
-    - full cycle - while figure is able to move down
-    - when figure reachs lowest position cycle stops
-    - change state with new default Glass
-- when all the arrays gets "1" as an object with the same index by the end of cycle - line destroys
-    - line rewrites with "0"
-    - all the _top_ objects moves down with gravity
-    - starts new cycle
-    - change state with new default Glass
-
-
-Phase I
-- vue.app
-    -components routed(?) depending on state in vuex
-        - Start.vue
-            - press any key
-            - change appState in vuex
-            - launch Game.vue
-        - Game.vue
-            - getGlassFromState()
-            - gameTick()
-                - checkGameOver()
-                      - writeAppState()
-                            - GameOver.vue
-                - canFigureGoDown()
-                
-                    if YES    
-                    - moveFigureDown()
-                     - removeOld()
-                     - writeNew()
-                     - rerender()
-                    
-                    if NO
-                    - checkGameOver()
-                        if YES
-                        - writeAppState()
-                            - GameOver.vue
-                        if NO
-                        - handleFilledLines()
-                        - checkEachLine()
-                            - if lineFilled
-                                - splice + unshift
-                            - if NO 
-                                - writeGlassToState()
-                                - generateNewFigure()
-                                - gameTick()       
-        - Controls.vue
-
-
-
-
-         
-
-
 init()
    prepareNextFigure() 
    putNextFigureInTheGlass() 
@@ -147,9 +83,24 @@ TESTS
         T - visually
 
 
-TODO later:
-figure appears 1 line above glass, and droped in the glass line by line.
-1. it will add ability to rapidly move figure left|right when only center is blocked
-2. it will reduce necessity to chek is figure reacts to self block as an obstacle 
 
- 
+Phaze 2
+horizontal movement
+
+1. for small test
+- keyevent handler for increase/decrease speed 
+- use debounce to moderate increase/decrease functions
+
+2. add horizontal movement
+2.1. possibility of movement and obstacles
+    - limit movement with glass walls
+    - check occupied by other figures blocks 
+        - check is figure selfaffect to this test result
+2.2. movement
+    - implement movement to 1 block for each keypress, w/o key-sticking
+    - test in on a minimum speed with empty glass (obstacle - walls)
+    - test it with semi-full glass (obstacles - walls+figures)
+    - implement debounce function
+    - test functional all together
+
+

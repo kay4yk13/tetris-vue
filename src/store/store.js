@@ -83,7 +83,7 @@ export default new Vuex.Store({
 		nextFigureWIdgetMatrix: [],
 		gameState: "welcome",
 		isGameOver: 0,
-		gravitySpeed: 500,
+		gravitySpeed: 1000,
 		// fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 		// emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	},
@@ -146,8 +146,31 @@ export default new Vuex.Store({
 			}
 			commit("changeCurrentFigureCoordsInGlassTo", 1);
 		},
+		moveFigureHorizontally({ commit }, direction) {
+			let coords = [...this.getters.getCurrentFigureCoords];
+			commit("changeCurrentFigureCoordsInGlassTo", 0);
+			for (let i = 0; i < 4; i++) {
+				if (direction === 0) {
+					coords[i][1]--;
+				} else {
+					coords[i][1]++;
+				}
+			}
+			commit("addCurrentFigureToState", coords);
+			commit("changeCurrentFigureCoordsInGlassTo", 1);
+		},
+		changeGravitySpeed({ commit }, vector) {
+			commit("changeGravitySpeed", vector);
+		},
 	},
 	mutations: {
+		changeGravitySpeed(state, vector) {
+			if (vector === 1) {
+				state.gravitySpeed -= 50;
+			} else {
+				state.gravitySpeed += 50;
+			}
+		},
 		toggleGameState(state, value) {
 			state.gameState = value;
 		},
@@ -188,7 +211,7 @@ export default new Vuex.Store({
 		},
 		cleanGlass(state) {
 			state.glass = [
-				[1, 1, 0, 0, 0, 0, 0, 0, 1, 1],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

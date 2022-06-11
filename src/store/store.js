@@ -84,8 +84,8 @@ export default new Vuex.Store({
 		gameState: "welcome",
 		isGameOver: 0,
 		gravitySpeed: 1000,
-		// fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		// emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+		emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	},
 	getters: {
 		getStateOfGame(state) {
@@ -117,6 +117,14 @@ export default new Vuex.Store({
 		},
 	},
 	actions: {
+		seekAndDestroyFullLine({ commit }) {
+			let glass = [...this.getters.getGlass];
+			glass.forEach((row, index) => {
+				if (row.every((value) => value > 0)) {
+					commit("setGlass", index);
+				}
+			});
+		},
 		togleGameState({ commit }, value) {
 			commit("toggleGameState", value);
 		},
@@ -150,7 +158,7 @@ export default new Vuex.Store({
 			let coords = [...this.getters.getCurrentFigureCoords];
 			commit("changeCurrentFigureCoordsInGlassTo", 0);
 			for (let i = 0; i < 4; i++) {
-				if (direction === 0) {
+				if (direction === `left`) {
 					coords[i][1]--;
 				} else {
 					coords[i][1]++;
@@ -193,7 +201,7 @@ export default new Vuex.Store({
 		},
 		matrixForWidget(state, value) {
 			let coords = this.getters.getNextFigureCoords;
-			if (value != 0) {
+			if (value > 0) {
 				for (let i = 0; i < 4; i++) {
 					let x = coords[i][1] - 3;
 					let y = coords[i][0] + 1;
@@ -230,9 +238,26 @@ export default new Vuex.Store({
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 			];
+		},
+		setGlass(state, index) {
+			// state.glass[index].fill(0);
+			// window.setTimeout(() => {
+			// 	state.glass[index].fill(1);
+			// }, 20);
+			// window.setTimeout(() => {
+			// 	state.glass[index].fill(0);
+			// }, 20);
+			// window.setTimeout(() => {
+			// 	state.glass[index].fill(1);
+			// }, 20);
+			// window.setTimeout(() => {
+			state.glass.splice(index, 1);
+			state.glass.unshift(Array(10).fill(0));
+			// console.log("Suckses");
+			// }, 20);
 		},
 	},
 });

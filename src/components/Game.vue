@@ -92,7 +92,6 @@ export default {
 		//main function
 		init() {
 			this.$store.dispatch("cleanGlass");
-			this.$store.dispatch("togleGameState", "game");
 			this.prepareNextFigure();
 			this.putNextFigureInTheGlass();
 			window.setTimeout(() => {
@@ -108,6 +107,7 @@ export default {
 			if (this.canCurrentFigureMoveDown() === true) {
 				this.moveFigureDown();
 			} else {
+				this.$store.dispatch("seekAndDestroyFullLine"); //and destroy
 				this.putNextFigureInTheGlass();
 			}
 			window.setTimeout(() => {
@@ -168,7 +168,7 @@ export default {
 		},
 		isCurrentFigureBumpTheWall(direction) {
 			let limit;
-			if (direction === 0) {
+			if (direction === `left`) {
 				limit = GLASS_LIMIT_LEFT;
 			} else {
 				limit = GLASS_LIMIT_RIGHT;
@@ -177,26 +177,54 @@ export default {
 			let blockCoords = figureCoords.filter((block) => {
 				return block[1] === limit;
 			});
-			// console.log("aray", blockCoords);
 			if (blockCoords.length > 0) {
 				return true;
 			}
+		},
+		isHorizontalMovementPossible(direction) {
+			let k;
+			if (direction === `left`) {
+				k = -1;
+			} else {
+				k = +1;
+			}
+			let coords = [...JSON.parse(JSON.stringify(this.currentFigureCoords))];
+			for (let i = 0; i < 4; i++) {
+				let x = coords[i][1];
+				let y = coords[i][0];
+				if (this.glass[y][x + k] === 1) {
+					let selfAffectBlocks = coords.filter((block) => {
+						return block[0] === y && block[1] === x + k;
+					});
+					if (selfAffectBlocks.length === 0) {
+						return false;
+					}
+				}
+			}
+			return true;
 		},
 		moveFigureDown() {
 			this.$store.dispatch("moveFigureDown");
 		},
 		moveFigureLeft() {
-			if (this.isCurrentFigureBumpTheWall(0) === true) {
+			if (this.isCurrentFigureBumpTheWall(`left`) === true) {
+				return;
+			} else {
+				if (this.isHorizontalMovementPossible(`left`) === true) {
+					this.$store.dispatch("moveFigureHorizontally", `left`);
+				}
 				return;
 			}
-			this.$store.dispatch("moveFigureHorizontally", 0);
 		},
-
 		moveFigureRight() {
-			if (this.isCurrentFigureBumpTheWall(1) === true) {
+			if (this.isCurrentFigureBumpTheWall(`right`) === true) {
+				return;
+			} else {
+				if (this.isHorizontalMovementPossible(`right`) === true) {
+					this.$store.dispatch("moveFigureHorizontally", `right`);
+				}
 				return;
 			}
-			this.$store.dispatch("moveFigureHorizontally", 1);
 		},
 	},
 };

@@ -84,7 +84,7 @@ export default new Vuex.Store({
 		nextFigureWIdgetMatrix: [],
 		gameState: "welcome",
 		isGameOver: 0,
-		gravitySpeed: 1000, //actually it's a delay in ms
+		gravitySpeed: 400, //actually it's a delay in ms
 		// fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 		// emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	},
@@ -175,21 +175,22 @@ export default new Vuex.Store({
 			});
 		},
 		test4Rorate({ commit }) {
-			let coords = [...this.getters.getCurrentFigureCoords];
+			let currentCoords = [...this.getters.getCurrentFigureCoords];
 			let allX = [];
 			let allY = [];
 			let zeroCoords = [];
 			let size;
+			let newCoords = [];
 			// let coordsDiff = []; somehow get differencies between zero cords of each block and currentfigurecoords
 			for (let i = 0; i < 4; i++) {
-				let x = coords[i][1];
-				let y = coords[i][0];
+				let x = currentCoords[i][1];
+				let y = currentCoords[i][0];
 				allX.push(x);
 				allY.push(y);
 			}
 			for (let i = 0; i < 4; i++) {
-				let x = coords[i][1] - Math.min(...allX);
-				let y = coords[i][0] - Math.min(...allY);
+				let x = currentCoords[i][1] - Math.min(...allX);
+				let y = currentCoords[i][0] - Math.min(...allY);
 				zeroCoords.push([y, x]);
 			}
 			if (Math.max(...allX) - Math.min(...allX) > Math.max(...allY) - Math.min(...allY)) {
@@ -197,8 +198,42 @@ export default new Vuex.Store({
 			} else {
 				size = Math.max(...allY) - Math.min(...allY) + 1;
 			}
-			commit("putFigureIntoRotatingSandBox", { zeroCoords, size });
-			commit("rotateFigureInRotatingSandBox");
+			// commit("putFigureIntoRotatingSandBox", { zeroCoords, size });
+			let sandBoxGlass = [];
+			for (let i = 0; i < size; i++) {
+				sandBoxGlass.unshift(Array(size).fill(0));
+			}
+			for (let i = 0; i < 4; i++) {
+				let x = zeroCoords[i][1];
+				let y = zeroCoords[i][0];
+				sandBoxGlass[y].splice(x, 1, 1);
+			}
+			// commit("rotateFigureInRotatingSandBox");
+			// let matrix = [...JSON.parse(JSON.stringify(this.state.sandBoxGlass))];
+			console.table("curent figure", sandBoxGlass);
+			let rotatedMatrix = sandBoxGlass[0].map((value, index) => sandBoxGlass.map((row) => row[index]).reverse());
+			console.table("rotated figure", rotatedMatrix);
+			let rotatedCoords = [];
+			for (let y = 0; y < rotatedMatrix.length; y++) {
+				let Xreferences = [];
+				rotatedMatrix[y].forEach((elem, index, array) => {
+					if (elem === 1) {
+						Xreferences.push(index);
+					}
+					return Xreferences;
+				});
+				for (let i = 0; i < Xreferences.length; i++) {
+					rotatedCoords.push([y, Xreferences[i]]);
+				}
+			}
+			for (let i = 0; i < 4; i++) {
+				let yNew = rotatedCoords[i][0] + Math.min(...allY);
+				let xNew = rotatedCoords[i][1] + Math.min(...allX);
+				newCoords.push([yNew, xNew]);
+			}
+			commit("changeCurrentFigureCoordsInGlassTo", 0);
+			commit("updateCurrenFigure", { newCoords, size });
+			commit("changeCurrentFigureCoordsInGlassTo", 1);
 		},
 	},
 
@@ -222,40 +257,45 @@ export default new Vuex.Store({
 		addCurrentFigureToState(state, coords) {
 			state.currentFigureCoords = coords;
 		},
-		////HERE
-		putFigureIntoRotatingSandBox(state, { zeroCoords, size }) {
-			state.sandBoxGlass = [];
-			console.log(size);
+		updateCurrenFigure(state, { newCoords, size }) {
 			for (let i = 0; i < size; i++) {
-				state.sandBoxGlass.unshift(Array(size).fill(0));
+				state.currentFigureCoords.unshift(Array(size).fill(0));
 			}
-			for (let i = 0; i < 4; i++) {
-				let x = zeroCoords[i][1];
-				let y = zeroCoords[i][0];
-				this.state.sandBoxGlass[y].splice(x, 1, 1);
-			}
+
+			state.currentFigureCoords = newCoords;
 		},
-		rotateFigureInRotatingSandBox(state) {
-			let matrix = [...JSON.parse(JSON.stringify(this.state.sandBoxGlass))];
-			console.table("curent figure", matrix);
-			let rotatedMatrix = matrix[0].map((value, index) => matrix.map((row) => row[index]).reverse());
-			console.table("rotated figure", rotatedMatrix);
-			let coords = [];
-			for (let y = 0; y < rotatedMatrix.length; y++) {
-				let Xreferences = [];
-				rotatedMatrix[y].forEach((elem, index, array) => {
-					if (elem === 1) {
-						Xreferences.push(index);
-					}
-					return Xreferences;
-				});
-				console.log("X coordinate:", Xreferences);
-				for (let k = 0; k < Xreferences.length; k++) {
-					coords.push([y, Xreferences[k]]);
-				}
-			}
-			console.log("array of coords:", coords);
-		},
+		////HERE
+		// putFigureIntoRotatingSandBox(state, { zeroCoords, size }) {
+		// 	state.sandBoxGlass = [];
+		// 	for (let i = 0; i < size; i++) {
+		// 		state.sandBoxGlass.unshift(Array(size).fill(0));
+		// 	}
+		// 	for (let i = 0; i < 4; i++) {
+		// 		let x = zeroCoords[i][1];
+		// 		let y = zeroCoords[i][0];
+		// 		this.state.sandBoxGlass[y].splice(x, 1, 1);
+		// 	}
+		// },
+		// rotateFigureInRotatingSandBox(state, matrix) {
+		// 	let matrix = [...JSON.parse(JSON.stringify(this.state.sandBoxGlass))];
+		// 	console.table("curent figure", matrix);
+		// 	let rotatedMatrix = matrix[0].map((value, index) => matrix.map((row) => row[index]).reverse());
+		// 	console.table("rotated figure", rotatedMatrix);
+		// 	let coords = [];
+		// 	for (let y = 0; y < rotatedMatrix.length; y++) {
+		// 		let Xreferences = [];
+		// 		rotatedMatrix[y].forEach((elem, index, array) => {
+		// 			if (elem === 1) {
+		// 				Xreferences.push(index);
+		// 			}
+		// 			return Xreferences;
+		// 		});
+		// 		for (let i = 0; i < Xreferences.length; i++) {
+		// 			coords.push([y, Xreferences[i]]);
+		// 		}
+		// 	}
+
+		// },
 
 		changeCurrentFigureCoordsInGlassTo(state, value) {
 			let coords = this.getters.getCurrentFigureCoords;
@@ -314,4 +354,3 @@ export default new Vuex.Store({
 		},
 	},
 });
-1;

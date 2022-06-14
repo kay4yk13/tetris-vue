@@ -1,10 +1,10 @@
 <template>
 	<div class="game">
-		<Keypress key-event="keydown" :key-code="87" @success="increaseGravitySpeed" />
+		<!-- <Keypress key-event="keydown" :key-code="87" @success="increaseGravitySpeed" /> -->
 		<Keypress key-event="keydown" :key-code="83" @success="decreaseGravitySpeed" />
 		<Keypress key-event="keydown" :key-code="65" @success="moveFigureLeft" />
 		<Keypress key-event="keydown" :key-code="68" @success="moveFigureRight" />
-		<Keypress key-event="keydown" :key-code="13" @success="test4Rorate" />
+		<Keypress key-event="keydown" :key-code="87" @success="test4Rorate" />
 		<div class="glass">
 			<div class="line" v-for="line in glass">
 				<span class="block" v-for="block in line" :style="{ 'background-color': activeColor(block) }"> </span>

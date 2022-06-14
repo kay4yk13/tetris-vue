@@ -78,14 +78,15 @@ export default new Vuex.Store({
 			},
 		],
 		glass: [],
+		sandBoxGlass: [],
 		currentFigureCoords: [],
 		nextFigureCoords: [],
 		nextFigureWIdgetMatrix: [],
 		gameState: "welcome",
 		isGameOver: 0,
-		gravitySpeed: 1000,
-		fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		gravitySpeed: 1000, //actually it's a delay in ms
+		// fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+		// emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 	},
 	getters: {
 		getStateOfGame(state) {
@@ -99,6 +100,9 @@ export default new Vuex.Store({
 		},
 		getFigureStartCoords: (state) => (name) => {
 			return [...state.figures.find((figure) => figure.name === name).coords];
+		},
+		getFigures(state) {
+			return [...state.figures];
 		},
 		getFiguresNames(state) {
 			return [...state.figures.map(({ name }) => name)];
@@ -117,14 +121,6 @@ export default new Vuex.Store({
 		},
 	},
 	actions: {
-		seekAndDestroyFullLine({ commit }) {
-			let glass = [...this.getters.getGlass];
-			glass.forEach((row, index) => {
-				if (row.every((value) => value > 0)) {
-					commit("setGlass", index);
-				}
-			});
-		},
 		togleGameState({ commit }, value) {
 			commit("toggleGameState", value);
 		},
@@ -170,7 +166,42 @@ export default new Vuex.Store({
 		changeGravitySpeed({ commit }, vector) {
 			commit("changeGravitySpeed", vector);
 		},
+		seekAndDestroyFullLine({ commit }) {
+			let glass = [...this.getters.getGlass];
+			glass.forEach((row, index) => {
+				if (row.every((value) => value > 0)) {
+					commit("lineDestroyer", index);
+				}
+			});
+		},
+		test4Rorate({ commit }) {
+			let coords = [...this.getters.getCurrentFigureCoords];
+			let allX = [];
+			let allY = [];
+			let zeroCoords = [];
+			let size;
+			// let coordsDiff = []; somehow get differencies between zero cords of each block and currentfigurecoords
+			for (let i = 0; i < 4; i++) {
+				let x = coords[i][1];
+				let y = coords[i][0];
+				allX.push(x);
+				allY.push(y);
+			}
+			for (let i = 0; i < 4; i++) {
+				let x = coords[i][1] - Math.min(...allX);
+				let y = coords[i][0] - Math.min(...allY);
+				zeroCoords.push([y, x]);
+			}
+			if (Math.max(...allX) - Math.min(...allX) > Math.max(...allY) - Math.min(...allY)) {
+				size = Math.max(...allX) - Math.min(...allX) + 1;
+			} else {
+				size = Math.max(...allY) - Math.min(...allY) + 1;
+			}
+			commit("putFigureIntoRotatingSandBox", { zeroCoords, size });
+			commit("rotateFigureInRotatingSandBox");
+		},
 	},
+
 	mutations: {
 		changeGravitySpeed(state, vector) {
 			if (vector === 1) {
@@ -191,6 +222,41 @@ export default new Vuex.Store({
 		addCurrentFigureToState(state, coords) {
 			state.currentFigureCoords = coords;
 		},
+		////HERE
+		putFigureIntoRotatingSandBox(state, { zeroCoords, size }) {
+			state.sandBoxGlass = [];
+			console.log(size);
+			for (let i = 0; i < size; i++) {
+				state.sandBoxGlass.unshift(Array(size).fill(0));
+			}
+			for (let i = 0; i < 4; i++) {
+				let x = zeroCoords[i][1];
+				let y = zeroCoords[i][0];
+				this.state.sandBoxGlass[y].splice(x, 1, 1);
+			}
+		},
+		rotateFigureInRotatingSandBox(state) {
+			let matrix = [...JSON.parse(JSON.stringify(this.state.sandBoxGlass))];
+			console.table("curent figure", matrix);
+			let rotatedMatrix = matrix[0].map((value, index) => matrix.map((row) => row[index]).reverse());
+			console.table("rotated figure", rotatedMatrix);
+			let coords = [];
+			for (let y = 0; y < rotatedMatrix.length; y++) {
+				let Xreferences = [];
+				rotatedMatrix[y].forEach((elem, index, array) => {
+					if (elem === 1) {
+						Xreferences.push(index);
+					}
+					return Xreferences;
+				});
+				console.log("X coordinate:", Xreferences);
+				for (let k = 0; k < Xreferences.length; k++) {
+					coords.push([y, Xreferences[k]]);
+				}
+			}
+			console.log("array of coords:", coords);
+		},
+
 		changeCurrentFigureCoordsInGlassTo(state, value) {
 			let coords = this.getters.getCurrentFigureCoords;
 			for (let i = 0; i < 4; i++) {
@@ -238,26 +304,13 @@ export default new Vuex.Store({
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
 				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
 			];
 		},
-		setGlass(state, index) {
-			// state.glass[index].fill(0);
-			// window.setTimeout(() => {
-			// 	state.glass[index].fill(1);
-			// }, 20);
-			// window.setTimeout(() => {
-			// 	state.glass[index].fill(0);
-			// }, 20);
-			// window.setTimeout(() => {
-			// 	state.glass[index].fill(1);
-			// }, 20);
-			// window.setTimeout(() => {
+		lineDestroyer(state, index) {
 			state.glass.splice(index, 1);
 			state.glass.unshift(Array(10).fill(0));
-			// console.log("Suckses");
-			// }, 20);
 		},
 	},
 });

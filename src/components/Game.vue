@@ -4,6 +4,7 @@
 		<Keypress key-event="keydown" :key-code="83" @success="decreaseGravitySpeed" />
 		<Keypress key-event="keydown" :key-code="65" @success="moveFigureLeft" />
 		<Keypress key-event="keydown" :key-code="68" @success="moveFigureRight" />
+		<Keypress key-event="keydown" :key-code="13" @success="test4Rorate" />
 		<div class="glass">
 			<div class="line" v-for="line in glass">
 				<span class="block" v-for="block in line" :style="{ 'background-color': activeColor(block) }"> </span>
@@ -81,7 +82,6 @@ export default {
 				return "1";
 			}
 		},
-		//norm (core method of rendering)
 		activeColor(block) {
 			if (block) {
 				return "black";
@@ -89,7 +89,10 @@ export default {
 				return "white";
 			}
 		},
-		//main function
+		test4Rorate() {
+			this.$store.dispatch("test4Rorate");
+		},
+
 		init() {
 			this.$store.dispatch("cleanGlass");
 			this.prepareNextFigure();
@@ -100,14 +103,13 @@ export default {
 		},
 		loop() {
 			if (this.isGameOver === 1) {
-				this.$store.dispatch("addCurrentFigureCoordsToGlass");
 				this.$store.dispatch("togleGameState", "game_over");
 				return;
 			}
 			if (this.canCurrentFigureMoveDown() === true) {
 				this.moveFigureDown();
 			} else {
-				this.$store.dispatch("seekAndDestroyFullLine"); //and destroy
+				this.$store.dispatch("seekAndDestroyFullLine");
 				this.putNextFigureInTheGlass();
 			}
 			window.setTimeout(() => {

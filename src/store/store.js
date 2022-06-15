@@ -174,45 +174,47 @@ export default new Vuex.Store({
 				}
 			});
 		},
-		test4Rorate({ commit }) {
+		figureRoration({ commit }) {
+			//find separately all X and Y of current figure
 			let currentCoords = [...this.getters.getCurrentFigureCoords];
-			let allX = [];
-			let allY = [];
+			let allXOld = [];
+			let allYOld = [];
 			let zeroCoords = [];
-			let size;
-			let newCoords = [];
-			// let coordsDiff = []; somehow get differencies between zero cords of each block and currentfigurecoords
 			for (let i = 0; i < 4; i++) {
-				let x = currentCoords[i][1];
-				let y = currentCoords[i][0];
-				allX.push(x);
-				allY.push(y);
+				let xOld = currentCoords[i][1];
+				let yOld = currentCoords[i][0];
+				allXOld.push(xOld);
+				allYOld.push(yOld);
 			}
+			//define differncies between current coords and zero coords(0,0)
 			for (let i = 0; i < 4; i++) {
-				let x = currentCoords[i][1] - Math.min(...allX);
-				let y = currentCoords[i][0] - Math.min(...allY);
+				let x = currentCoords[i][1] - Math.min(...allXOld);
+				let y = currentCoords[i][0] - Math.min(...allYOld);
 				zeroCoords.push([y, x]);
 			}
-			if (Math.max(...allX) - Math.min(...allX) > Math.max(...allY) - Math.min(...allY)) {
-				size = Math.max(...allX) - Math.min(...allX) + 1;
+			//meizure sides of figure and determine orientation
+			let size;
+			let verticalOrientation = false;
+			if (Math.max(...allXOld) - Math.min(...allXOld) > Math.max(...allYOld) - Math.min(...allYOld)) {
+				size = Math.max(...allXOld) - Math.min(...allXOld) + 1;
+				verticalOrientation = false;
 			} else {
-				size = Math.max(...allY) - Math.min(...allY) + 1;
+				size = Math.max(...allYOld) - Math.min(...allYOld) + 1;
+				verticalOrientation = true;
 			}
-			// commit("putFigureIntoRotatingSandBox", { zeroCoords, size });
+			//build square grid for figure with side length equals longest figure side
 			let sandBoxGlass = [];
 			for (let i = 0; i < size; i++) {
-				sandBoxGlass.unshift(Array(size).fill(0));
+				sandBoxGlass.push(Array(size).fill(0));
 			}
 			for (let i = 0; i < 4; i++) {
 				let x = zeroCoords[i][1];
 				let y = zeroCoords[i][0];
 				sandBoxGlass[y].splice(x, 1, 1);
 			}
-			// commit("rotateFigureInRotatingSandBox");
-			// let matrix = [...JSON.parse(JSON.stringify(this.state.sandBoxGlass))];
-			console.table("curent figure", sandBoxGlass);
+			//rotate figure via matrix transposition
 			let rotatedMatrix = sandBoxGlass[0].map((value, index) => sandBoxGlass.map((row) => row[index]).reverse());
-			console.table("rotated figure", rotatedMatrix);
+			//define coords of rotated figure
 			let rotatedCoords = [];
 			for (let y = 0; y < rotatedMatrix.length; y++) {
 				let Xreferences = [];
@@ -226,12 +228,47 @@ export default new Vuex.Store({
 					rotatedCoords.push([y, Xreferences[i]]);
 				}
 			}
+			//find position of rotated figure at the coordinates of current figure
+			let newCoords = [];
+			let xNew;
 			for (let i = 0; i < 4; i++) {
-				let yNew = rotatedCoords[i][0] + Math.min(...allY);
-				let xNew = rotatedCoords[i][1] + Math.min(...allX);
+				let yNew = rotatedCoords[i][0] + Math.min(...allYOld);
+				if (size === 4) {
+					if (verticalOrientation === true) {
+						xNew = rotatedCoords[i][1] + Math.min(...allXOld) - 1;
+					} else {
+						xNew = rotatedCoords[i][1] + Math.min(...allXOld) - 2;
+					}
+				} else {
+					if (verticalOrientation === true && size === 3) {
+						xNew = rotatedCoords[i][1] + Math.min(...allXOld) - 1;
+					} else {
+						xNew = rotatedCoords[i][1] + Math.min(...allXOld);
+					}
+				}
 				newCoords.push([yNew, xNew]);
 			}
+			//check is alleged place available
+			//walls
+			for (let i = 0; i < 4; i++) {
+				let blockCoords = newCoords.filter((block) => {
+					return block[1] < 0 || block[1] > 9;
+				});
+				if (blockCoords.length > 0) {
+					return;
+				}
+			}
+			//figures in the glass
 			commit("changeCurrentFigureCoordsInGlassTo", 0);
+			let glass = [...this.getters.getGlass];
+			for (let i = 0; i < 4; i++) {
+				let x = newCoords[i][1];
+				let y = newCoords[i][0];
+				if (glass[y][x] === 1) {
+					commit("changeCurrentFigureCoordsInGlassTo", 1);
+					return;
+				}
+			}
 			commit("updateCurrenFigure", { newCoords, size });
 			commit("changeCurrentFigureCoordsInGlassTo", 1);
 		},

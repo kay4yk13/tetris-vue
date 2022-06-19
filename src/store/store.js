@@ -24,7 +24,7 @@ export default new Vuex.Store({
 					[0, 6],
 					[1, 5],
 				],
-				color: "red",
+				color: "orange",
 			},
 			{
 				name: "S",
@@ -64,7 +64,7 @@ export default new Vuex.Store({
 					[1, 5],
 					[1, 6],
 				],
-				color: "black",
+				color: "grey",
 			},
 			{
 				name: "I",
@@ -74,7 +74,7 @@ export default new Vuex.Store({
 					[0, 5],
 					[0, 6],
 				],
-				color: "orange",
+				color: "red",
 			},
 		],
 		glass: [],
@@ -84,9 +84,10 @@ export default new Vuex.Store({
 		nextFigureWIdgetMatrix: [],
 		gameState: "welcome",
 		isGameOver: 0,
-		gravitySpeed: 400, //actually it's a delay in ms
-		// fullLine: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-		// emptyLine: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		scoreCounter: 0,
+		gravitySpeed: 600,
+		previousGravitySpeed: 0,
+		delay: [500, 400, 350, 300, 250, 200, 150, 100, 50, 30],
 	},
 	getters: {
 		getStateOfGame(state) {
@@ -100,6 +101,9 @@ export default new Vuex.Store({
 		},
 		getFigureStartCoords: (state) => (name) => {
 			return [...state.figures.find((figure) => figure.name === name).coords];
+		},
+		getFigureColor: (state) => (name) => {
+			return state.figures.find((figure) => figure.name === name).color;
 		},
 		getFigures(state) {
 			return [...state.figures];
@@ -118,6 +122,9 @@ export default new Vuex.Store({
 		},
 		getGravitySpeed(state) {
 			return state.gravitySpeed;
+		},
+		getScoreCounter(state) {
+			return state.scoreCounter;
 		},
 	},
 	actions: {
@@ -163,8 +170,19 @@ export default new Vuex.Store({
 			commit("addCurrentFigureToState", coords);
 			commit("changeCurrentFigureCoordsInGlassTo", 1);
 		},
-		changeGravitySpeed({ commit }, vector) {
-			commit("changeGravitySpeed", vector);
+		softDrop({ commit }, value) {
+			commit("softDrop", value);
+		},
+		difficultyChanger({ commit }) {
+			let score = this.getters.getScoreCounter;
+			let index;
+			if (score % 10 === 0) {
+				index = score / 10;
+			} else {
+				index = Math.floor(score / 10);
+			}
+			let value = this.state.delay[index];
+			commit("difficultyChanger", value);
 		},
 		seekAndDestroyFullLine({ commit }) {
 			let glass = [...this.getters.getGlass];
@@ -192,7 +210,7 @@ export default new Vuex.Store({
 				let y = currentCoords[i][0] - Math.min(...allYOld);
 				zeroCoords.push([y, x]);
 			}
-			//meizure sides of figure and determine orientation
+			//measure sides of figure and determine orientation
 			let size;
 			let verticalOrientation = false;
 			if (Math.max(...allXOld) - Math.min(...allXOld) > Math.max(...allYOld) - Math.min(...allYOld)) {
@@ -273,13 +291,16 @@ export default new Vuex.Store({
 			commit("changeCurrentFigureCoordsInGlassTo", 1);
 		},
 	},
-
 	mutations: {
-		changeGravitySpeed(state, vector) {
-			if (vector === 1) {
-				state.gravitySpeed -= 50;
+		difficultyChanger(state, value) {
+			state.gravitySpeed = value;
+		},
+		softDrop(state, value) {
+			if (value === `drop`) {
+				state.previousGravitySpeed = this.getters.getGravitySpeed;
+				state.gravitySpeed = 25;
 			} else {
-				state.gravitySpeed += 50;
+				state.gravitySpeed = state.previousGravitySpeed;
 			}
 		},
 		toggleGameState(state, value) {
@@ -298,42 +319,8 @@ export default new Vuex.Store({
 			for (let i = 0; i < size; i++) {
 				state.currentFigureCoords.unshift(Array(size).fill(0));
 			}
-
 			state.currentFigureCoords = newCoords;
 		},
-		////HERE
-		// putFigureIntoRotatingSandBox(state, { zeroCoords, size }) {
-		// 	state.sandBoxGlass = [];
-		// 	for (let i = 0; i < size; i++) {
-		// 		state.sandBoxGlass.unshift(Array(size).fill(0));
-		// 	}
-		// 	for (let i = 0; i < 4; i++) {
-		// 		let x = zeroCoords[i][1];
-		// 		let y = zeroCoords[i][0];
-		// 		this.state.sandBoxGlass[y].splice(x, 1, 1);
-		// 	}
-		// },
-		// rotateFigureInRotatingSandBox(state, matrix) {
-		// 	let matrix = [...JSON.parse(JSON.stringify(this.state.sandBoxGlass))];
-		// 	console.table("curent figure", matrix);
-		// 	let rotatedMatrix = matrix[0].map((value, index) => matrix.map((row) => row[index]).reverse());
-		// 	console.table("rotated figure", rotatedMatrix);
-		// 	let coords = [];
-		// 	for (let y = 0; y < rotatedMatrix.length; y++) {
-		// 		let Xreferences = [];
-		// 		rotatedMatrix[y].forEach((elem, index, array) => {
-		// 			if (elem === 1) {
-		// 				Xreferences.push(index);
-		// 			}
-		// 			return Xreferences;
-		// 		});
-		// 		for (let i = 0; i < Xreferences.length; i++) {
-		// 			coords.push([y, Xreferences[i]]);
-		// 		}
-		// 	}
-
-		// },
-
 		changeCurrentFigureCoordsInGlassTo(state, value) {
 			let coords = this.getters.getCurrentFigureCoords;
 			for (let i = 0; i < 4; i++) {
@@ -361,33 +348,15 @@ export default new Vuex.Store({
 			return;
 		},
 		cleanGlass(state) {
-			state.glass = [
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				[1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
-			];
+			state.glass = [];
+			for (var i = 0; i < 21; i++) {
+				state.glass.push(Array(10).fill(0));
+			}
 		},
 		lineDestroyer(state, index) {
 			state.glass.splice(index, 1);
 			state.glass.unshift(Array(10).fill(0));
+			state.scoreCounter++;
 		},
 	},
 });

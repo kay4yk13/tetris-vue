@@ -5,9 +5,6 @@
 </template>
 <script>
 export default {
-	data() {
-		return {};
-	},
 	methods: {
 		goIndex() {
 			this.$store.dispatch("togleGameState", "welcome");
@@ -17,14 +14,4 @@ export default {
 	},
 };
 </script>
-<style>
-h1 {
-	position: absolute;
-	z-index: 2;
-	left: 40%;
-	top: 40%;
-	text-align: center;
-	cursor: pointer;
-	font-size: 50px;
-}
-</style>
+<style></style>

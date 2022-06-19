@@ -1,22 +1,22 @@
 <template>
 	<div class="game">
-		<Keypress key-event="keydown" :key-code="13" @success="increaseGravitySpeed" />
-		<Keypress key-event="keydown" :key-code="83" @success="decreaseGravitySpeed" />
-		<Keypress key-event="keydown" :key-code="65" @success="moveFigureLeft" />
-		<Keypress key-event="keydown" :key-code="68" @success="moveFigureRight" />
-		<Keypress key-event="keydown" :key-code="87" @success="figureRoration" />
 		<div class="glass">
 			<div class="line" v-for="line in glass">
 				<span class="block" v-for="block in line" :style="{ 'background-color': activeColor(block) }"> </span>
 			</div>
 		</div>
 		<div class="widget">
-			<b>speed: {{ 2000 - gravitySpeed }}</b>
-			<br />
 			<b>NEXT FIGURE</b>
-			<div class="w-line" v-for="line in WidgetMatrix">
+			<div class="w-line" v-for="line in widgetMatrix">
 				<span class="w-block" v-for="block in line" :style="{ 'background-color': activeColor(block) }"> </span>
 			</div>
+			<b>Your Score: {{ score * 100 }}</b> <br />
+			<b>speed: {{ 1 + Math.floor(score / 10) }}</b>
+		</div>
+		<div class="controls">
+			<button @click="figureRoration"></button>
+			<button @click="moveFigureLeft"></button>
+			<button @click="moveFigureRight"></button>
 		</div>
 	</div>
 </template>
@@ -25,14 +25,12 @@
 const GLASS_LIMIT_RIGHT = 9;
 const GLASS_LIMIT_LEFT = 0;
 const GLASS_LIMIT_BOTTOM = 20;
+var KEY_FLAG = true;
+
 export default {
-	components: {
-		Keypress: () => import("vue-keypress"),
-	},
 	data() {
 		return {};
 	},
-
 	computed: {
 		gameState() {
 			return this.$store.getters.getStateOfGame;
@@ -55,44 +53,28 @@ export default {
 		isGameOver() {
 			return this.$store.getters.getGOstatus;
 		},
-		WidgetMatrix() {
+		widgetMatrix() {
 			return this.$store.getters.getWidgetMatrix;
+		},
+		score() {
+			return this.$store.getters.getScoreCounter;
+		},
+		color() {},
+	},
+	watch: {
+		score() {
+			this.$store.dispatch("difficultyChanger");
 		},
 	},
 	created() {
 		this.init();
 	},
-	methods: {
-		increaseGravitySpeed() {
-			if (this.gravitySpeed >= 100) {
-				this.$store.dispatch("changeGravitySpeed", 1);
-			}
-			return;
-		},
-		decreaseGravitySpeed() {
-			if (this.gravitySpeed <= 2000) {
-				this.$store.dispatch("changeGravitySpeed", 0);
-			}
-			return;
-		},
-		activeGameState() {
-			if (this.gameState === "game_over") {
-				return "0.4";
-			} else {
-				return "1";
-			}
-		},
-		activeColor(block) {
-			if (block) {
-				return "black";
-			} else {
-				return "white";
-			}
-		},
-		figureRoration() {
-			this.$store.dispatch("figureRoration");
-		},
+	mounted() {
+		document.addEventListener("keydown", (event) => this.keyboardDown(event));
+		document.addEventListener("keyup", (event) => this.keyboardUp(event));
+	},
 
+	methods: {
 		init() {
 			this.$store.dispatch("cleanGlass");
 			this.prepareNextFigure();
@@ -116,6 +98,30 @@ export default {
 				this.loop();
 			}, this.gravitySpeed);
 		},
+		keyboardDown(event) {
+			if (event.key === "ArrowLeft") this.moveFigureLeft();
+			if (event.key === "ArrowRight") this.moveFigureRight();
+			if (event.key === "ArrowDown" && KEY_FLAG === true) this.softDrop(`drop`), (KEY_FLAG = false);
+			if (event.key === "ArrowUp" && KEY_FLAG === true) this.figureRoration(), (KEY_FLAG = false);
+		},
+		keyboardUp(event) {
+			if (event.key === "ArrowUp") KEY_FLAG = true;
+			if (event.key === "ArrowDown") this.softDrop(`stop`), (KEY_FLAG = true);
+		},
+		activeGameState() {
+			if (this.gameState === "game_over") {
+				return "0.4";
+			} else {
+				return "1";
+			}
+		},
+		activeColor(block) {
+			if (block) {
+				return "black";
+			} else {
+				return "white";
+			}
+		},
 		prepareNextFigure() {
 			let name = this.prepareNextFigureName();
 			let coords = [...JSON.parse(JSON.stringify(this.getFigureStartCoords(name)))];
@@ -127,6 +133,9 @@ export default {
 		},
 		getFigureStartCoords(name) {
 			return this.$store.getters.getFigureStartCoords(name);
+		},
+		getFigureColor(name) {
+			return this.$store.getters.getFigureColor(name);
 		},
 		putNextFigureInTheGlass() {
 			if (this.isNextFigureCollideGlass() === false) {
@@ -228,6 +237,13 @@ export default {
 				return;
 			}
 		},
+		figureRoration() {
+			this.$store.dispatch("figureRoration");
+		},
+
+		softDrop(value) {
+			this.$store.dispatch("softDrop", value);
+		},
 	},
 };
 </script>
@@ -245,7 +261,6 @@ export default {
 	height: 40px;
 	display: flex;
 }
-
 .block {
 	height: 100%;
 	width: 10%;

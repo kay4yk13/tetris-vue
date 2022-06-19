@@ -1,7 +1,6 @@
 <template>
 	<div>
 		<WelcomeScreen v-if="gameState == 'welcome'"></WelcomeScreen>
-		<!-- <Game v-if="gameState == 'game' || 'game_over'" :style="{ opacity: activeGameState() }"></Game> -->
 		<Game v-if="gameState != 'welcome'" :style="{ opacity: activeGameState() }"></Game>
 		<GameOver v-if="gameState == 'game_over'"></GameOver>
 		<Controls></Controls>
@@ -36,4 +35,14 @@ export default {
 	},
 };
 </script>
-<style></style>
+<style>
+h1 {
+	position: absolute;
+	z-index: 2;
+	left: 40%;
+	top: 40%;
+	text-align: center;
+	cursor: pointer;
+	font-size: 50px;
+}
+</style>

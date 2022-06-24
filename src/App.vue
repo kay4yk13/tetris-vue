@@ -3,21 +3,18 @@
 		<WelcomeScreen v-if="gameState == 'welcome'"></WelcomeScreen>
 		<Game v-if="gameState != 'welcome'" :style="{ opacity: activeGameState() }"></Game>
 		<GameOver v-if="gameState == 'game_over'"></GameOver>
-		<Controls></Controls>
 	</div>
 </template>
 <script>
 import Game from "./components/Game.vue";
 import WelcomeScreen from "./components/WelcomeScreen.vue";
 import GameOver from "./components/Gameover.vue";
-import Controls from "./components/Controls.vue";
 
 export default {
 	components: {
 		Game,
 		WelcomeScreen,
 		GameOver,
-		Controls,
 	},
 	computed: {
 		gameState() {
@@ -36,13 +33,17 @@ export default {
 };
 </script>
 <style>
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 h1 {
-	position: absolute;
-	z-index: 2;
-	left: 40%;
-	top: 40%;
+	font-family: "Press Start 2P", cursive;
 	text-align: center;
 	cursor: pointer;
 	font-size: 50px;
+}
+h2 {
+	font-family: "Press Start 2P";
+	text-align: center;
+	cursor: pointer;
+	font-size: 20px;
 }
 </style>

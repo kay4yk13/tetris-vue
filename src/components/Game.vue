@@ -12,16 +12,16 @@
 			</div>
 			<b>Your Score: {{ score * 100 }}</b> <br />
 			<b>speed: {{ 1 + Math.floor(score / 10) }}</b>
-		</div>
-		<div class="controls">
-			<button @click="figureRoration"></button>
-			<button @click="moveFigureLeft"></button>
-			<button @click="moveFigureRight"></button>
+			<br /><br /><br />
+			<b>Controls: arrows</b>
+			<b></b>
 		</div>
 	</div>
 </template>
 
 <script>
+import useSound from "vue-use-sound";
+import Sfx from "../assets/sounds.mp3";
 const GLASS_LIMIT_RIGHT = 9;
 const GLASS_LIMIT_LEFT = 0;
 const GLASS_LIMIT_BOTTOM = 20;
@@ -65,12 +65,30 @@ export default {
 		score() {
 			return this.$store.getters.getScoreCounter;
 		},
+		colorSheme() {
+			return this.$store.getters.getColorScheme;
+		},
 	},
-	// watch: {
-	// 	score() {
-	// 		this.$store.dispatch("difficultyChanger");
-	// 	},
-	// },
+	setup() {
+		const [play] = useSound(Sfx, {
+			sprite: {
+				move: [2220, 500],
+				rotate: [2890, 150],
+				drop: [1290, 250],
+				destroy: [0, 700],
+				gameover: [8100, 1100],
+			},
+			volume: 0.3,
+		});
+		return {
+			play,
+		};
+	},
+	watch: {
+		score() {
+			this.play({ id: "destroy" });
+		},
+	},
 	created() {
 		this.init();
 	},
@@ -78,7 +96,6 @@ export default {
 		document.addEventListener("keydown", (event) => this.keyboardDown(event));
 		document.addEventListener("keyup", (event) => this.keyboardUp(event));
 	},
-
 	methods: {
 		init() {
 			this.$store.dispatch("cleanGlass");
@@ -91,7 +108,8 @@ export default {
 		},
 		loop() {
 			if (this.isGameOver === 1) {
-				this.$store.dispatch("togleGameState", "game_over");
+				this.$store.dispatch("toggleGameState", "game_over");
+				this.play({ id: "gameover" });
 				return;
 			}
 			if (this.canCurrentFigureMoveDown() === true) {
@@ -105,14 +123,18 @@ export default {
 			}, this.gravitySpeed);
 		},
 		keyboardDown(event) {
-			if (event.key === "ArrowLeft") this.moveFigureLeft();
-			if (event.key === "ArrowRight") this.moveFigureRight();
-			if (event.key === "ArrowDown" && KEY_FLAG === true) this.softDrop(`drop`), (KEY_FLAG = false);
-			if (event.key === "ArrowUp" && KEY_FLAG === true) this.figureRoration(), (KEY_FLAG = false);
+			if (this.isGameOver != 1) {
+				if (event.key === "ArrowLeft") this.moveFigureLeft();
+				if (event.key === "ArrowRight") this.moveFigureRight();
+				if (event.key === "ArrowDown" && KEY_FLAG === true) this.softDrop(`drop`), this.play({ id: "move" }), (KEY_FLAG = false);
+				if (event.key === "ArrowUp" && KEY_FLAG === true) this.figureRoration(), this.play({ id: "rotate" }), (KEY_FLAG = false);
+			}
 		},
 		keyboardUp(event) {
-			if (event.key === "ArrowUp") KEY_FLAG = true;
-			if (event.key === "ArrowDown") this.softDrop(`stop`), (KEY_FLAG = true);
+			if (this.isGameOver != 1) {
+				if (event.key === "ArrowUp") KEY_FLAG = true;
+				if (event.key === "ArrowDown") this.softDrop(`stop`), (KEY_FLAG = true);
+			}
 		},
 		activeGameState() {
 			if (this.gameState === "game_over") {
@@ -123,7 +145,11 @@ export default {
 		},
 		activeColor(block) {
 			if (block) {
-				return block;
+				if (this.colorSheme === `cf`) {
+					return block;
+				} else {
+					return "black";
+				}
 			} else {
 				return "white";
 			}
@@ -161,6 +187,7 @@ export default {
 				let x = coords[i][1];
 				let y = coords[i][0];
 				if (this.glass[y][x] > 0 || typeof this.glass[y][x] === "string") {
+					this.play({ id: "drop" });
 					return true;
 				}
 			}
@@ -177,12 +204,14 @@ export default {
 							return block[0] === y + 1 && block[1] === x;
 						});
 						if (selfAffectBlocks.length === 0) {
+							this.play({ id: "drop" });
 							return false;
 						}
 					}
 				}
 				return true;
 			}
+			this.play({ id: "drop" });
 			return false;
 		},
 		isCurrentFigureBumpTheWall(direction) {
@@ -216,6 +245,7 @@ export default {
 						return block[0] === y && block[1] === x + k;
 					});
 					if (selfAffectBlocks.length === 0) {
+						this.play({ id: "drop" });
 						return false;
 					}
 				}
@@ -231,6 +261,7 @@ export default {
 			} else {
 				if (this.isHorizontalMovementPossible(`left`) === true) {
 					this.$store.dispatch("moveFigureHorizontally", `left`);
+					this.play({ id: "move" });
 				}
 				return;
 			}
@@ -241,6 +272,7 @@ export default {
 			} else {
 				if (this.isHorizontalMovementPossible(`right`) === true) {
 					this.$store.dispatch("moveFigureHorizontally", `right`);
+					this.play({ id: "move" });
 				}
 				return;
 			}
@@ -248,7 +280,6 @@ export default {
 		figureRoration() {
 			this.$store.dispatch("figureRoration");
 		},
-
 		softDrop(value) {
 			this.$store.dispatch("softDrop", value);
 		},
@@ -258,6 +289,7 @@ export default {
 <style>
 .glass {
 	margin: auto;
+	margin-top: 5%;
 	width: 405px;
 	height: 802px;
 	border-style: hidden solid solid solid;
@@ -281,6 +313,7 @@ export default {
 	position: absolute;
 	right: 5%;
 	top: 5%;
+	margin-top: 5%;
 	width: 200px;
 	height: 400px;
 	text-align: center;

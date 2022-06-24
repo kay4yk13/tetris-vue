@@ -90,6 +90,7 @@ export default new Vuex.Store({
 		gravitySpeed: 600,
 		previousGravitySpeed: 0,
 		delay: [500, 400, 350, 300, 250, 200, 150, 100, 50, 30],
+		colorScheme: "cf",
 	},
 	getters: {
 		getStateOfGame(state) {
@@ -97,6 +98,9 @@ export default new Vuex.Store({
 		},
 		getGOstatus(state) {
 			return state.isGameOver;
+		},
+		getColorScheme(state) {
+			return state.colorScheme;
 		},
 		getGlass(state) {
 			return [...state.glass];
@@ -136,8 +140,11 @@ export default new Vuex.Store({
 		},
 	},
 	actions: {
-		togleGameState({ commit }, value) {
+		toggleGameState({ commit }, value) {
 			commit("toggleGameState", value);
+		},
+		toggleColorScheme({ commit }, value) {
+			commit("toggleColorScheme", value);
 		},
 		cleanGlass({ commit }) {
 			commit("cleanGlass");
@@ -319,6 +326,9 @@ export default new Vuex.Store({
 		},
 		toggleGameState(state, value) {
 			state.gameState = value;
+		},
+		toggleColorScheme(state, value) {
+			state.colorScheme = value;
 		},
 		setGOstatus(state, value) {
 			state.isGameOver = value;

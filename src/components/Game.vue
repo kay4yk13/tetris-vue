@@ -101,7 +101,6 @@ export default {
 			this.$store.dispatch("cleanGlass");
 			this.prepareNextFigure();
 			this.putNextFigureInTheGlass();
-			this.$store.dispatch("difficultyChanger");
 			window.setTimeout(() => {
 				this.loop();
 			}, this.gravitySpeed);
@@ -116,6 +115,7 @@ export default {
 				this.moveFigureDown();
 			} else {
 				this.$store.dispatch("seekAndDestroyFullLine");
+				this.$store.dispatch("difficultyChanger");
 				this.putNextFigureInTheGlass();
 			}
 			window.setTimeout(() => {
@@ -328,5 +328,10 @@ export default {
 	border-style: groove;
 	border-width: 1px;
 	border-color: rgb(134, 135, 139);
+}
+b {
+	font-family: "Press Start 2P", cursive;
+	font-size: 10px;
+	padding-top: 4%;
 }
 </style>

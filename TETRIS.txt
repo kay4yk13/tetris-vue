@@ -104,3 +104,67 @@ horizontal movement
     - test functional all together
 
 
+rerender left
+
+let GLASS_LIMIT_RIGHT = 
+GLASS_LIMIT_LEFT 
+
+
+MATRIX
+
+1.    change figureStartCoords to be places in 0,0 coordinates
+1.1.  for in game spawning the figure just add 4 to X of figureStartCoords
+
+2.1.  getFigureStartCoords()
+ // result is an array e.g. [[0, 1], [0, 2],[1, 0], [1, 1]]
+
+2.2.  putCurrentFigureCoordsIn_IMAGINARY_Glass() (existing method with minor updates)
+ // awaited result 
+0, 1, 1
+1, 1, 0
+0, 0, 0
+    - find center point
+
+3.1.  transpositionGlassMatrix()
+// rotation point according to this method always in the center, to prevent jumping right on each rotate
+// by the way, square will also rotates around its bottom right block
+// awaited result is an array looks like this
+0, 1, 0
+0, 1, 1
+0, 0, 1
+
+3.2.  getCoordsOfOccupiedBlocksIn_IMAGINARY_Glass()
+// awaited result is an array e.g. [[0, 1], [1, 1],[1, 2], [2, 2]]
+
+    - getCurrentFigureCoords()
+    - find center point (or stricktly write in state )
+    - build _IMAGINARY_ Rotated Figure around this point()
+        - find differencies between X and Y of each block of currentFigure and its twin from zero-coords (3.2)
+        - add results from prev. step to zero coords.
+    - check collisions with actual glass()
+if ok 
+    - change currentFigureCoords()
+    - change values in glass()
+
+
+
+SHIFTING
+
+1. - for each figure in state add 3 arrays of its block coords shift on every 90* rotate 
+
+2.1. set Counter to 0
+2.2. getCurrentFigureCoords() 
+    - get it's name
+    - get shift-model {counter+1}
+    - check collisions of glass and shift-model
+2.3. IF ok
+    - setNewFigureCoords
+    - Counter++
+    - change values in glass()
+
+
+
+
+
+
+

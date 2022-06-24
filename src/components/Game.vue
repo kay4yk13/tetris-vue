@@ -35,6 +35,9 @@ export default {
 		gameState() {
 			return this.$store.getters.getStateOfGame;
 		},
+		gravitySpeed() {
+			return this.$store.getters.getGravitySpeed;
+		},
 		glass() {
 			return this.$store.getters.getGlass;
 		},
@@ -44,11 +47,14 @@ export default {
 		nextFigureCoords() {
 			return this.$store.getters.getNextFigureCoords;
 		},
-		gravitySpeed() {
-			return this.$store.getters.getGravitySpeed;
-		},
 		currentFigureCoords() {
 			return this.$store.getters.getCurrentFigureCoords;
+		},
+		nextFigureColor() {
+			return this.$store.getters.getNextFigureColor;
+		},
+		currentFigureColor() {
+			return this.$store.getters.getCurrentFigureColor;
 		},
 		isGameOver() {
 			return this.$store.getters.getGOstatus;
@@ -59,13 +65,12 @@ export default {
 		score() {
 			return this.$store.getters.getScoreCounter;
 		},
-		color() {},
 	},
-	watch: {
-		score() {
-			this.$store.dispatch("difficultyChanger");
-		},
-	},
+	// watch: {
+	// 	score() {
+	// 		this.$store.dispatch("difficultyChanger");
+	// 	},
+	// },
 	created() {
 		this.init();
 	},
@@ -79,6 +84,7 @@ export default {
 			this.$store.dispatch("cleanGlass");
 			this.prepareNextFigure();
 			this.putNextFigureInTheGlass();
+			this.$store.dispatch("difficultyChanger");
 			window.setTimeout(() => {
 				this.loop();
 			}, this.gravitySpeed);
@@ -117,7 +123,7 @@ export default {
 		},
 		activeColor(block) {
 			if (block) {
-				return "black";
+				return block;
 			} else {
 				return "white";
 			}
@@ -125,7 +131,8 @@ export default {
 		prepareNextFigure() {
 			let name = this.prepareNextFigureName();
 			let coords = [...JSON.parse(JSON.stringify(this.getFigureStartCoords(name)))];
-			this.$store.dispatch("addNextFigureToState", coords);
+			let color = this.getFigureStartColor(name);
+			this.$store.dispatch("addNextFigureCoordinatesToState", { coords, color });
 		},
 		prepareNextFigureName() {
 			let index = Math.floor(Math.random() * this.figuresNames.length);
@@ -134,13 +141,14 @@ export default {
 		getFigureStartCoords(name) {
 			return this.$store.getters.getFigureStartCoords(name);
 		},
-		getFigureColor(name) {
-			return this.$store.getters.getFigureColor(name);
+		getFigureStartColor(name) {
+			return this.$store.getters.getFigureStartColor(name);
 		},
 		putNextFigureInTheGlass() {
 			if (this.isNextFigureCollideGlass() === false) {
 				let coords = [...JSON.parse(JSON.stringify(this.nextFigureCoords))];
-				this.$store.dispatch("addCurrentFigureToState", coords);
+				let color = this.nextFigureColor;
+				this.$store.dispatch("addCurrentFigureCoordinatesToState", { coords, color });
 				this.$store.dispatch("addCurrentFigureCoordsToGlass");
 				this.prepareNextFigure();
 			} else {
@@ -152,7 +160,7 @@ export default {
 			for (let i = 0; i < 4; i++) {
 				let x = coords[i][1];
 				let y = coords[i][0];
-				if (this.glass[y][x] === 1) {
+				if (this.glass[y][x] > 0 || typeof this.glass[y][x] === "string") {
 					return true;
 				}
 			}
@@ -164,7 +172,7 @@ export default {
 				for (let i = 0; i < 4; i++) {
 					let x = coords[i][1];
 					let y = coords[i][0];
-					if (this.glass[y + 1][x] === 1) {
+					if (this.glass[y + 1][x] > 0 || typeof this.glass[y + 1][x] === "string") {
 						let selfAffectBlocks = coords.filter((block) => {
 							return block[0] === y + 1 && block[1] === x;
 						});
@@ -203,7 +211,7 @@ export default {
 			for (let i = 0; i < 4; i++) {
 				let x = coords[i][1];
 				let y = coords[i][0];
-				if (this.glass[y][x + k] === 1) {
+				if (this.glass[y][x + k] > 0 || typeof this.glass[y][x + k] === `string`) {
 					let selfAffectBlocks = coords.filter((block) => {
 						return block[0] === y && block[1] === x + k;
 					});

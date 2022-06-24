@@ -54,7 +54,7 @@ export default new Vuex.Store({
 					[1, 5],
 					[1, 6],
 				],
-				color: "pink",
+				color: "magenta",
 			},
 			{
 				name: "L",
@@ -81,6 +81,8 @@ export default new Vuex.Store({
 		sandBoxGlass: [],
 		currentFigureCoords: [],
 		nextFigureCoords: [],
+		currentFigureColor: 0,
+		nextFigureColor: 0,
 		nextFigureWIdgetMatrix: [],
 		gameState: "welcome",
 		isGameOver: 0,
@@ -102,7 +104,7 @@ export default new Vuex.Store({
 		getFigureStartCoords: (state) => (name) => {
 			return [...state.figures.find((figure) => figure.name === name).coords];
 		},
-		getFigureColor: (state) => (name) => {
+		getFigureStartColor: (state) => (name) => {
 			return state.figures.find((figure) => figure.name === name).color;
 		},
 		getFigures(state) {
@@ -114,11 +116,17 @@ export default new Vuex.Store({
 		getNextFigureCoords(state) {
 			return [...state.nextFigureCoords];
 		},
-		getWidgetMatrix(state) {
-			return [...state.nextFigureWIdgetMatrix];
-		},
 		getCurrentFigureCoords(state) {
 			return [...state.currentFigureCoords];
+		},
+		getNextFigureColor(state) {
+			return state.nextFigureColor;
+		},
+		getCurrentFigureColor(state) {
+			return state.currentFigureColor;
+		},
+		getWidgetMatrix(state) {
+			return [...state.nextFigureWIdgetMatrix];
 		},
 		getGravitySpeed(state) {
 			return state.gravitySpeed;
@@ -137,28 +145,33 @@ export default new Vuex.Store({
 		setGOstatus({ commit }, value) {
 			commit("setGOstatus", value);
 		},
-		addNextFigureToState({ commit }, coords) {
-			commit("addNextFigureToState", coords);
+		addNextFigureCoordinatesToState({ commit }, { coords, color }) {
+			commit("addNextFigureCoordinatesToState", coords);
+			commit("addNextFigureColorToState", color);
 			commit("matrixForWidget", 0);
-			commit("matrixForWidget", 1);
+			commit("matrixForWidget", color);
 		},
-		addCurrentFigureToState({ commit }, coords) {
-			commit("addCurrentFigureToState", coords);
+		addCurrentFigureCoordinatesToState({ commit }, { coords, color }) {
+			commit("addCurrentFigureCoordinatesToState", coords);
+			commit("addCurrentFigureColorToState", color);
 		},
 		addCurrentFigureCoordsToGlass({ commit }) {
-			commit("changeCurrentFigureCoordsInGlassTo", 1);
+			let color = this.getters.getCurrentFigureColor;
+			commit("changeCurrentFigureCoordsInGlassTo", color);
 		},
 		moveFigureDown({ commit }) {
 			let coords = [...this.getters.getCurrentFigureCoords];
+			let color = this.getters.getCurrentFigureColor;
 			commit("changeCurrentFigureCoordsInGlassTo", 0);
 			for (let i = 0; i < 4; i++) {
 				coords[i][0]++;
-				commit("addCurrentFigureToState", coords);
+				commit("addCurrentFigureCoordinatesToState", coords);
 			}
-			commit("changeCurrentFigureCoordsInGlassTo", 1);
+			commit("changeCurrentFigureCoordsInGlassTo", color);
 		},
 		moveFigureHorizontally({ commit }, direction) {
 			let coords = [...this.getters.getCurrentFigureCoords];
+			let color = this.getters.getCurrentFigureColor;
 			commit("changeCurrentFigureCoordsInGlassTo", 0);
 			for (let i = 0; i < 4; i++) {
 				if (direction === `left`) {
@@ -167,8 +180,8 @@ export default new Vuex.Store({
 					coords[i][1]++;
 				}
 			}
-			commit("addCurrentFigureToState", coords);
-			commit("changeCurrentFigureCoordsInGlassTo", 1);
+			commit("addCurrentFigureCoordinatesToState", coords);
+			commit("changeCurrentFigureCoordsInGlassTo", color);
 		},
 		softDrop({ commit }, value) {
 			commit("softDrop", value);
@@ -187,7 +200,7 @@ export default new Vuex.Store({
 		seekAndDestroyFullLine({ commit }) {
 			let glass = [...this.getters.getGlass];
 			glass.forEach((row, index) => {
-				if (row.every((value) => value > 0)) {
+				if (row.every((value) => value > 0 || typeof value === "string")) {
 					commit("lineDestroyer", index);
 				}
 			});
@@ -279,16 +292,17 @@ export default new Vuex.Store({
 			//figures in the glass
 			commit("changeCurrentFigureCoordsInGlassTo", 0);
 			let glass = [...this.getters.getGlass];
+			let color = this.getters.getCurrentFigureColor;
 			for (let i = 0; i < 4; i++) {
 				let x = newCoords[i][1];
 				let y = newCoords[i][0];
 				if (glass[y][x] === 1) {
-					commit("changeCurrentFigureCoordsInGlassTo", 1);
+					commit("changeCurrentFigureCoordsInGlassTo", color);
 					return;
 				}
 			}
-			commit("updateCurrenFigure", { newCoords, size });
-			commit("changeCurrentFigureCoordsInGlassTo", 1);
+			commit("updateCurrenFigureOrientation", { newCoords, size });
+			commit("changeCurrentFigureCoordsInGlassTo", color);
 		},
 	},
 	mutations: {
@@ -309,13 +323,19 @@ export default new Vuex.Store({
 		setGOstatus(state, value) {
 			state.isGameOver = value;
 		},
-		addNextFigureToState(state, coords) {
+		addNextFigureCoordinatesToState(state, coords) {
 			state.nextFigureCoords = coords;
 		},
-		addCurrentFigureToState(state, coords) {
+		addNextFigureColorToState(state, color) {
+			state.nextFigureColor = color;
+		},
+		addCurrentFigureCoordinatesToState(state, coords) {
 			state.currentFigureCoords = coords;
 		},
-		updateCurrenFigure(state, { newCoords, size }) {
+		addCurrentFigureColorToState(state, color) {
+			state.currentFigureColor = color;
+		},
+		updateCurrenFigureOrientation(state, { newCoords, size }) {
 			for (let i = 0; i < size; i++) {
 				state.currentFigureCoords.unshift(Array(size).fill(0));
 			}
@@ -331,7 +351,7 @@ export default new Vuex.Store({
 		},
 		matrixForWidget(state, value) {
 			let coords = this.getters.getNextFigureCoords;
-			if (value > 0) {
+			if (value > 0 || typeof value === "string") {
 				for (let i = 0; i < 4; i++) {
 					let x = coords[i][1] - 3;
 					let y = coords[i][0] + 1;

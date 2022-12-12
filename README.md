@@ -1,6 +1,6 @@
 # tetris 
-## classic brick game made with Vue.js/vuex and some libs
-
+## classic brick game made with Vue.js/vuex and some libs\
+[Play here](https://kay4yk13.github.io/tetris-vue/)
 # Controls:
 ```
 Choose color scheme, or press any key to start your game with full brightness :)
